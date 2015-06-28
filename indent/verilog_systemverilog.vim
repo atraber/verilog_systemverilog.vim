@@ -42,6 +42,18 @@ endif
 
 set cpo-=C
 
+function s:prevnonblank(lnum)
+  let lnum = prevnonblank(a:lnum)
+  let line = getline(lnum)
+
+  if exists("b:verilog_dont_indent_prep") &&
+    \ line =~ '^\s*`\<\(ifdef\|ifndef\|else\|elsif\|endif\|define\|include\)\>'
+    return s:prevnonblank(lnum-1)
+  endif
+
+  return lnum
+endfunction
+
 function GetVerilog_SystemVerilogIndent()
 
   if exists('b:verilog_indent_width')
@@ -49,6 +61,13 @@ function GetVerilog_SystemVerilogIndent()
   else
     let offset = &sw
   endif
+
+  if exists('b:verilog_indent_prep')
+    let offset_prep = b:verilog_indent_prep
+  else
+    let offset_prep = offset
+  endif
+
   if exists('b:verilog_indent_modules')
     let indent_modules = offset
   else
@@ -56,14 +75,14 @@ function GetVerilog_SystemVerilogIndent()
   endif
 
   " Find a non-blank line above the current line.
-  let lnum = prevnonblank(v:lnum - 1)
+  let lnum = s:prevnonblank(v:lnum - 1)
 
   " At the start of the file use zero indent.
   if lnum == 0
     return 0
   endif
 
-  let lnum2 = prevnonblank(lnum - 1)
+  let lnum2 = s:prevnonblank(lnum - 1)
   let curr_line  = getline(v:lnum)
   let last_line  = getline(lnum)
   let last_line2 = getline(lnum2)
@@ -72,7 +91,8 @@ function GetVerilog_SystemVerilogIndent()
   let offset_comment1 = 1
   " Define the condition of an open statement
   "   Exclude the match of //, /* or */
-  let vlog_openstat = '\(\<or\>\|\([*/]\)\@<![*(,{><+-/%^&|!=?:]\([*/]\)\@!\)'
+  let vlog_openstat = '^\(\s*[/][/]\)\@!.*$\(\<or\>\|\([*/]\)\@<![*(,{><+-/%^&|!=?:]\([*/]\)\@!\)'
+  " Matches or, *, /, 
   " Define the condition when the statement ends with a one-line comment
   let vlog_comment = '\(//.*\|/\*.*\*/\s*\)'
   if exists('b:verilog_indent_verbose')
@@ -83,7 +103,7 @@ function GetVerilog_SystemVerilogIndent()
 
   " Get new context line if it is fully commented out
   while last_line2 =~ '^\s*/\(/\|\*.*\*/\s*$\)'
-    let lnum2 = prevnonblank(lnum2 - 1)
+    let lnum2 = s:prevnonblank(lnum2 - 1)
     let last_line2 = getline(lnum2)
   endwhile
 
@@ -98,17 +118,19 @@ function GetVerilog_SystemVerilogIndent()
 
   " Indent after if/else/for/case/always/initial/specify/fork blocks
   elseif last_line =~ '^\s*\(`\@<!\<\(if\|else\)\>\)' ||
-    \ last_line =~ '^\s*\<\(for\|while\|case\%[[zx]]\|do\|foreach\|randcase\)\>' ||
+    \ last_line =~ '^\s*\<\(for\|while\|do\|foreach\|randcase\)\>' ||
+    \ last_line =~ '^\s*\(\<unique\>\)*\s*\<\(case\%[[zx]]\)\>' ||
     \ last_line =~ '^\s*\<\(always\|always_comb\|always_ff\|always_latch\)\>' ||
     \ last_line =~ '^\s*\<\(initial\|specify\|fork\|final\)\>' ||
     \ last_line =~ '^\s*\(\w\+\s*:\s*\)\?\<\(assert\|assume\|cover\)\>'
     if last_line !~ '\(;\|\<end\>\)\s*' . vlog_comment . '*$' ||
       \ last_line =~ '\(//\|/\*\).*\(;\|\<end\>\)\s*' . vlog_comment . '*$'
-      let ind = ind + offset
       if vverb
         echom "Indent after a block statement:"
         echom last_line
       endif
+      
+      let ind = ind + offset
     endif
   " Indent after function/task/class/package/sequence/clocking/
   " interface/covergroup/property/program blocks
@@ -167,11 +189,11 @@ function GetVerilog_SystemVerilogIndent()
   " Only de-indents if last line was an end of statement that ended with ;
   " or if it starts with a `define call, which might not require the ; end
   elseif (
-    \ last_line =~ ';' . vlog_comment . '*$' ||
+    \ last_line =~ ';\s*' . vlog_comment . '*$' ||
     \ last_line =~ '^\s*`\k\+'
     \ ) &&
-    \ last_line2 =~ '\<\(`\@<!if\|`\@<!else\|for\|while\|always\|initial\|do\|foreach\|final\)\>\(\s*(.*)\)\?\s*' . vlog_comment . '*$' &&
-    \ last_line2 !~ '\(//\|/\*\).*\<\(`\@<!if\|`\@<!else\|for\|while\|always\|initial\|do\|foreach\|final\)\>' &&
+    \ last_line2 =~ '\<\(`\@<!if\|`\@<!if\|else\|for\|while\|always\|initial\|do\|foreach\|final\)\>\(\s*(.*)\)\?\s*' . vlog_comment . '*$' &&
+    \ last_line2 !~ '\(//\|/\*\).*\<\(`\@<!if\|`\@<!if\|else\|for\|while\|always\|initial\|do\|foreach\|final\)\>' &&
     \ ( last_line2 !~ '\<\(begin\|assert\)\>' ||
     \   last_line2 =~ '\(//\|/\*\).*\<\(begin\|assert\)\>' )
     let ind = ind - offset
@@ -182,7 +204,7 @@ function GetVerilog_SystemVerilogIndent()
 
     " Multiple-line statement (including case statement)
     " Open statement
-    "   Ident the first open line
+    "   Indent the first open line
     elseif  last_line =~ vlog_openstat . '\s*' . vlog_comment . '*$' &&
       \ last_line !~ '\(//\|/\*\).*' . vlog_openstat . '\s*$' &&
       \ last_line2 !~ vlog_openstat . '\s*' . vlog_comment . '*$'
@@ -238,9 +260,9 @@ function GetVerilog_SystemVerilogIndent()
     if exists("g:verilog_dont_deindent_eos")
       let ind = ind - offset
     else
-      let ind = ind - indent_modules
+      let ind = ind - indent_modules - offset
     endif
-    if vverb && indent_modules
+    if vverb
       echom "De-indent the end of a module:"
       echom curr_line
     endif
@@ -254,6 +276,15 @@ function GetVerilog_SystemVerilogIndent()
       echom curr_line
     endif
 
+    " De-indent else after else
+  elseif curr_line =~ '^\s*\<else\>' &&
+    \ last_line2 =~ '^\s*\<else\>'
+    let ind = ind - offset
+    if vverb
+      echom "De-indent else after else"
+      echom curr_line
+    endif
+
   " De-indent on a stand-alone 'begin'
   elseif curr_line =~ '^\s*\<begin\>'
     if last_line !~ '^\s*\<\(fork\)\>' &&
@@ -262,7 +293,7 @@ function GetVerilog_SystemVerilogIndent()
       \ last_line !~ '^\s*\<\(property\|program\)\>' &&
       \ last_line !~ '^\s*\()*\s*;\|)\+\)\s*' . vlog_comment . '*$' && (
         \ last_line =~
-        \ '\<\(`\@<!if\|`\@<!else\|for\|while\|case\%[[zx]]\|always\|initial\|do\|foreach\|randcase\|final\)\>' ||
+        \ '\<\(`\@<!if\|`\@<!else\|for\|while\|case\%[[zx]]\|always\|always_comb\|always_ff\|always_latch\|initial\|do\|foreach\|randcase\|final\)\>' ||
         \ last_line =~ ')\s*' . vlog_comment . '*$' ||
         \ last_line =~ vlog_openstat . '\s*' . vlog_comment . '*$' )
       let ind = ind - offset
@@ -293,10 +324,20 @@ function GetVerilog_SystemVerilogIndent()
     endif
 
   " De-indent `else , `elsif , or `endif
-  elseif curr_line =~ '^\s*`\<\(else\|elsif\|endif\)\>'
+  elseif !exists("b:verilog_dont_indent_prep") &&
+    \ curr_line =~ '^\s*`\<\(else\|elsif\|endif\)\>'
     let ind = ind - offset
     if vverb
       echom "De-indent `else , `elsif , or `endif statement:"
+      echom curr_line
+    endif
+
+  " Set indent to 0 for all preprocessor commands
+  elseif exists("b:verilog_dont_indent_prep") &&
+    \ curr_line =~ '^\s*`\<\(ifdef\|ifndef\|else\|elsif\|endif\|define\|include\)\>'
+    let ind = 0
+    if vverb
+      echom "Preprocessor command found, set indent to 0"
       echom curr_line
     endif
 
