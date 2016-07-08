@@ -3,14 +3,14 @@
 " Credits:
 "   Originally created by
 "       Chih-Tsun Huang <cthuang@larc.ee.nthu.edu.tw>
-" 	http://larc.ee.nthu.edu.tw/~cthuang/vim/indent/verilog.vim
+"   http://larc.ee.nthu.edu.tw/~cthuang/vim/indent/verilog.vim
 "   Suggestions for improvement, bug reports by
 "     Leo Butlero <lbutler@brocade.com>
 "   Last maintainer: Amit Sethi <amitrajsethi@yahoo.com>
 "
 " Buffer Variables:
 "     b:verilog_indent_modules : indenting after the declaration
-"				 of module blocks
+"        of module blocks
 "     b:verilog_indent_width   : indenting width
 "     b:verilog_indent_verbose : verbose to each indenting
 "
@@ -92,7 +92,7 @@ function GetVerilog_SystemVerilogIndent()
   " Define the condition of an open statement
   "   Exclude the match of //, /* or */
   let vlog_openstat = '^\(\s*[/][/]\)\@!.*$\(\<or\>\|\([*/]\)\@<![*(,{><+-/%^&|!=?:]\([*/]\)\@!\)'
-  " Matches or, *, /, 
+  " Matches or, *, /,
   " Define the condition when the statement ends with a one-line comment
   let vlog_comment = '\(//.*\|/\*.*\*/\s*\)'
   if exists('b:verilog_indent_verbose')
@@ -129,7 +129,7 @@ function GetVerilog_SystemVerilogIndent()
         echom "Indent after a block statement:"
         echom last_line
       endif
-      
+
       let ind = ind + offset
     endif
   " Indent after function/task/class/package/sequence/clocking/
