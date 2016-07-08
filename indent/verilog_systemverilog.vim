@@ -71,7 +71,7 @@ function GetVerilog_SystemVerilogIndent()
   if exists('b:verilog_indent_modules')
     let indent_modules = offset
   else
-    let indent_modules = 0
+    let indent_modules = &sw
   endif
 
   " Find a non-blank line above the current line.
@@ -132,6 +132,25 @@ function GetVerilog_SystemVerilogIndent()
 
       let ind = ind + offset
     endif
+
+  " indent after generate if | for, twice
+  elseif last_line =~ '^\s*\(\<generate\>\)\s*\(`\@<!\<\(if\|for\)\>\)'
+      if vverb
+        echom "Indent after a generate if statement:"
+        echom last_line
+      endif
+
+      let ind = ind + offset + offset
+
+  " indent after standalone generate
+  elseif last_line =~ '^\s*\(\<generate\>\)\s*'
+      if vverb
+        echom "Indent after a generate if statement:"
+        echom last_line
+      endif
+
+      let ind = ind + offset
+
   " Indent after function/task/class/package/sequence/clocking/
   " interface/covergroup/property/program blocks
   elseif last_line =~ '^\s*\(\<\(static\|protected\|local\)\>\s\+\)\?\<\(function\|task\)\>' ||
@@ -250,7 +269,9 @@ function GetVerilog_SystemVerilogIndent()
       \ curr_line =~ '^\s*\<\(endfunction\|endtask\|endspecify\|endclass\)\>' ||
       \ curr_line =~ '^\s*\<\(endpackage\|endsequence\|endclocking\|endinterface\)\>' ||
       \ curr_line =~ '^\s*\<\(endgroup\|endproperty\|endprogram\)\>' ||
-      \ curr_line =~ '^\s*}'
+      \ curr_line =~ '^\s*\<\(endgenerate\)\>' ||
+      \ curr_line =~ '^\s*}' ||
+      \ curr_line =~ '^\s*)\s*'
     let ind = ind - offset
     if vverb
       echom "De-indent the end of a block:"
