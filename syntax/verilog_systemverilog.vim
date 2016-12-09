@@ -1,5 +1,5 @@
 " Vim syntax file
-" Language:	SystemVerilog (superset extension of Verilog)
+" Language: SystemVerilog (superset extension of Verilog)
 
 " Extends Verilog syntax
 " Requires $VIMRUNTIME/syntax/verilog.vim to exist
@@ -7,11 +7,10 @@
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
 if version < 600
-   syntax clear
+    syntax clear
 elseif exists("b:current_syntax")
-   finish
+    finish
 endif
-
 
 " Read in Verilog syntax files
 if version < 600
@@ -72,7 +71,7 @@ syn keyword verilogStatement   int longint shortint
 syn keyword verilogStatement   struct packed
 syn keyword verilogStatement   final
 syn keyword verilogStatement   import export
-syn keyword verilogStatement   context pure 
+syn keyword verilogStatement   context pure
 syn keyword verilogStatement   void shortreal chandle string
 syn keyword verilogStatement   clocking endclocking
 syn keyword verilogStatement   interface endinterface modport
@@ -83,7 +82,7 @@ syn keyword verilogStatement   alias matches solve static assert
 syn keyword verilogStatement   assume before expect bind
 syn keyword verilogStatement   extends null tagged extern this
 syn keyword verilogStatement   first_match throughout timeprecision
-syn keyword verilogStatement   timeunit priority type union 
+syn keyword verilogStatement   timeunit priority type union
 syn keyword verilogStatement   uwire var cross ref wait_order intersect
 syn keyword verilogStatement   wildcard within
 syn keyword verilogStatement   triggered
@@ -261,20 +260,20 @@ endif
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_verilog_syn_inits")
-   if version < 508
-      let did_verilog_syn_inits = 1
-      command -nargs=+ HiLink hi link <args>
-   else
-      command -nargs=+ HiLink hi def link <args>
-   endif
+    if version < 508
+        let did_verilog_syn_inits = 1
+        command -nargs=+ HiLink hi link <args>
+    else
+        command -nargs=+ HiLink hi def link <args>
+    endif
 
-   " The default highlighting.
-   HiLink verilogMethod          Function
-   HiLink verilogTypeDef         TypeDef
-   HiLink verilogAssertion       Include
-   HiLink verilogObject          Type
+    " The default highlighting.
+    HiLink verilogMethod          Function
+    HiLink verilogTypeDef         TypeDef
+    HiLink verilogAssertion       Include
+    HiLink verilogObject          Type
 
-   delcommand HiLink
+    delcommand HiLink
 endif
 
 let b:current_syntax = "verilog_systemverilog"
