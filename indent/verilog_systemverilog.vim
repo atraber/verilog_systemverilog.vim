@@ -32,6 +32,7 @@ setlocal indentkeys=!^F,o,O,0),0},=begin,=end,=join,=endcase,=join_any,=join_non
 setlocal indentkeys+==endmodule,=endfunction,=endtask,=endspecify
 setlocal indentkeys+==endclass,=endpackage,=endsequence,=endclocking
 setlocal indentkeys+==endinterface,=endgroup,=endprogram,=endproperty
+setlocal indentkeys+==endgenerate
 setlocal indentkeys+==`else,=`endif
 setlocal indentkeys+==else
 
@@ -95,7 +96,8 @@ function GetVerilog_SystemVerilogIndent()
   " Matches or, *, /,
   " Define the condition when the statement ends with a one-line comment
   let vlog_comment = '\(//.*\|/\*.*\*/\s*\)'
-  if exists('b:verilog_indent_verbose')
+
+  if exists('b:verilog_indent_verbose') && b:verilog_indent_verbose == 1
     let vverb = 1
   else
     let vverb = 0
