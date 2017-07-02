@@ -1,5 +1,5 @@
 " Vim syntax file
-" Language: SystemVerilog (superset extension of Verilog)
+" Language: SystemVerilog
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -15,160 +15,228 @@ endif
 if version >= 600
    setlocal iskeyword=@,48-57,63,_,192-255
 else
-   set iskeyword=@,48-57,63,_,192-255
+   set      iskeyword=@,48-57,63,_,192-255
 endif
-
-" A bunch of useful Verilog keywords
-
-
-syn keyword verilogTodo contained TODO FIXME
-
-syn match   verilogOperator "[&|~><!)(*#%@+/=?:;}{,.\^\-\[\]]"
-
-"syn match   verilogGlobal "`[a-zA-Z0-9_]\+\>"
-syn match   verilogGlobal "`celldefine"
-syn match   verilogGlobal "`default_nettype"
-syn match   verilogGlobal "`define"
-syn match   verilogGlobal "`else"
-syn match   verilogGlobal "`elsif"
-syn match   verilogGlobal "`endcelldefine"
-syn match   verilogGlobal "`endif"
-syn match   verilogGlobal "`ifdef"
-syn match   verilogGlobal "`ifndef"
-syn match   verilogGlobal "`include"
-syn match   verilogGlobal "`line"
-syn match   verilogGlobal "`nounconnected_drive"
-syn match   verilogGlobal "`resetall"
-syn match   verilogGlobal "`timescale"
-syn match   verilogGlobal "`unconnected_drive"
-syn match   verilogGlobal "`undef"
-syn match   verilogGlobal "$[a-zA-Z0-9_]\+\>"
-
-syn match   verilogConstant "\<[A-Z][A-Z0-9_]\+\>"
-
-syn match   verilogNumber "\(\<\d\+\|\)'[sS]\?[bB]\s*[0-1_xXzZ?]\+\>"
-syn match   verilogNumber "\(\<\d\+\|\)'[sS]\?[oO]\s*[0-7_xXzZ?]\+\>"
-syn match   verilogNumber "\(\<\d\+\|\)'[sS]\?[dD]\s*[0-9_xXzZ?]\+\>"
-syn match   verilogNumber "\(\<\d\+\|\)'[sS]\?[hH]\s*[0-9a-fA-F_xXzZ?]\+\>"
-syn match   verilogNumber "\<[+-]\=[0-9_]\+\(\.[0-9_]*\|\)\(e[0-9_]*\|\)\>"
-
-syn region  verilogString start=+"+ skip=+\\"+ end=+"+ contains=verilogEscape,@Spell
-syn match   verilogEscape +\\[nt"\\]+ contained
-syn match   verilogEscape "\\\o\o\=\o\=" contained
-
-" Directives
-syn match   verilogDirective   "//\s*synopsys\>.*$"
-syn region  verilogDirective   start="/\*\s*synopsys\>" end="\*/"
-syn region  verilogDirective   start="//\s*synopsys dc_script_begin\>" end="//\s*synopsys dc_script_end\>"
-
-syn match   verilogDirective   "//\s*\$s\>.*$"
-syn region  verilogDirective   start="/\*\s*\$s\>" end="\*/"
-syn region  verilogDirective   start="//\s*\$s dc_script_begin\>" end="//\s*\$s dc_script_end\>"
-
 
 " Store cpoptions
 let oldcpo=&cpoptions
 set cpo-=C
 
-syn sync lines=1000
+" the order actually matters here! Keep vlog_pre as early as possible, at
+" least before all other preprocessor commands
+syn match   vlog_pre          "`[a-zA-Z0-9_]\+\>"
+
+syn match   vlog_preproc      "`timescale"
+
+syn match   vlog_include      "`include"
+
+syn match   vlog_define       "`define"
+syn match   vlog_define       "`undef"
+
+syn match   vlog_precondit    "`ifdef"
+syn match   vlog_precondit    "`ifndef"
+syn match   vlog_precondit    "`else"
+syn match   vlog_precondit    "`elsif"
+syn match   vlog_precondit    "`endif"
+
+" less used stuff
+syn match   vlog_preproc      "`celldefine"
+syn match   vlog_preproc      "`endcelldefine"
+syn match   vlog_preproc      "`default_nettype"
+syn match   vlog_preproc      "`line"
+syn match   vlog_preproc      "`nounconnected_drive"
+syn match   vlog_preproc      "`resetall"
+syn match   vlog_preproc      "`unconnected_drive"
+
+syn keyword vlog_port         input output inout
+
+syn keyword vlog_type         logic reg wire bit tri
+syn keyword vlog_type         int integer unsigned signed
+syn keyword vlog_type         byte
+syn keyword vlog_type         shortint shortreal
+syn keyword vlog_type         longint
+syn keyword vlog_type         real realtime time
+syn keyword vlog_type         mailbox event chandle string
+syn keyword vlog_type         void
+
+syn keyword vlog_structure    enum union struct
+syn keyword vlog_structure    class endclass package endpackage program endprogram
+syn keyword vlog_structure    interface endinterface modport clocking endclocking
+syn keyword vlog_structure    checker endchecker config endconfig
+syn keyword vlog_structure    module endmodule table endtable
+syn keyword vlog_structure    primitive endprimitive
+syn keyword vlog_storageclass virtual packed local protected const
+syn keyword vlog_storageclass extends implements
+syn keyword vlog_storageclass parameter localparam genvar
+syn keyword vlog_typedef      typedef
+syn keyword vlog_modifier     context pure export import automatic extern static
+
+syn keyword vlog_special      timeprecision timeunit
+syn keyword vlog_special      design liblist instance use cell
+
+syn keyword vlog_conditional  if else case endcase casex casez
+syn keyword vlog_conditional  inside unique unique0 priority
+syn keyword vlog_conditional  generate endgenerate
+syn keyword vlog_repeat       forever repeat while for do foreach
+syn keyword vlog_label        return continue break default
+
+syn keyword vlog_statement    assign deassign alias force release
+syn keyword vlog_statement    new
+syn keyword vlog_process      always always_latch always_ff always_comb
+syn keyword vlog_process      initial final
+
+syn match   vlog_constant     "\<[A-Z][A-Z0-9_]\+\>"
+
+syn match   vlog_time         "#[0-9]\+\(fs\|ps\|ns\|us\|ms\|s\)\=\>"
+
+syn match   vlog_number       "\(\<\d\+\|\)'[sS]\?[bB]\s*[0-1_xXzZ?]\+\>"
+syn match   vlog_number       "\(\<\d\+\|\)'[sS]\?[oO]\s*[0-7_xXzZ?]\+\>"
+syn match   vlog_number       "\(\<\d\+\|\)'[sS]\?[dD]\s*[0-9_xXzZ?]\+\>"
+syn match   vlog_number       "\(\<\d\+\|\)'[sS]\?[hH]\s*[0-9a-fA-F_xXzZ?]\+\>"
+syn match   vlog_number       "\<[+-]\=[0-9_]\+\(\.[0-9_]*\|\)\(e[0-9_]*\|\)\>"
+
+syn keyword vlog_sensitivity  edge posedge negedge
+
+syn match   vlog_operator     "[&|~><!)(*%@+/=?:;}{,.\^\-\[\]]"
+syn match   vlog_operator     "\<implies\>"
+syn keyword vlog_keyword      null this super
+
+syn keyword vlog_control      fork join join_any join_none forkjoin
+
+syn match   vlog_function     "\$\=\(\s\+\.\)\@<!\<\w\+\ze("
+
+" a bunch of "deprecated" keywords. e.g. defparam is pretty much considered
+" evil in modern code. However, one might encounter it in library code or
+" legacy code
+syn keyword vlog_discouraged  defparam macromodule
+
+syn region  vlog_string start=+"+ skip=+\\"+ end=+"+ contains=vlog_escape,@Spell
+syn match   vlog_escape +\\[nt"\\]+ contained
+syn match   vlog_escape "\\\o\o\=\o\=" contained
+
+syn case ignore
+syn keyword vlog_todo         contained TODO FIXME XXX
+syn case match
+syn match   vlog_comment      "//.*" contains=vlog_todo,@Spell,vlog_bad_newline
+
+" space after a \
+" This is dangerous as most compilers will not treat the \ as a
+" line-continuation
+syn match	  vlog_bad_newline           "\\\s\+$"
+syn match	  vlog_bad_newline contained "\\\s\+$"
+
+" really weird and mostly unused verilog keywords, thus not enabled by default
+if exists("g:vlog_all_keyword")
+    syn keyword vlog_keyword2  and buf bufif0 bufif1 cmos nand nmos nor not
+    syn keyword vlog_keyword2  notif0 notif1 or pmos pull0 pull1 pulldown
+    syn keyword vlog_keyword2  pullup wand wor xnor xor rcmos rnmos rpmos
+    syn keyword vlog_keyword2  rtran rtranif0 rtranif1 supply0
+    syn keyword vlog_keyword2  supply1 tran tranif0 tranif1 tri0 tri1 triand
+    syn keyword vlog_keyword2  trior trireg
+    syn keyword vlog_keyword2  weak weak0 weak1 strong strong0 strong1 highz0 highz1
+    syn keyword vlog_keyword2  large medium small
+
+    " specify
+    syn keyword vlog_keyword2  specify endspecify showcancelled noshowcancelled
+    syn keyword vlog_keyword2  pulsestyle_onevent pulsestyle_ondetect
+    syn keyword vlog_keyword2  ifnone
+
+    hi default link vlog_keyword2     Keyword
+endif
+
+syn keyword vlog_assert        assert assume restrict expect
+syn keyword vlog_keyword       accept_on reject_on
+syn keyword vlog_keyword       sync_accept_on sync_reject_on
+syn keyword vlog_keyword       eventually nexttime until until_with
+syn keyword vlog_keyword       s_eventually s_nexttime s_until s_until_with
+syn keyword vlog_keyword       s_always
+syn keyword vlog_keyword       intersect first_match throughout within
+syn keyword vlog_keyword       triggered matched iff disable
+
+syn region  vlog_em_script   start="//\s*synopsys\s\+dc_script_begin\>" end="//\s*synopsys\s\+dc_script_end\>"
+
+hi default link vlog_pre          Macro
+hi default link vlog_preproc      PreProc
+hi default link vlog_include      Include
+hi default link vlog_define       Define
+hi default link vlog_precondit    PreCondit
+
+hi default link vlog_port         StorageClass
+hi default link vlog_type         Type
+hi default link vlog_structure    Structure
+hi default link vlog_storageclass StorageClass
+hi default link vlog_typedef      Typedef nettype
+
+hi default link vlog_modifier     Type
+
+hi default link vlog_special      Special
+
+hi default link vlog_statement    Statement
+hi default link vlog_process      Statement
+hi default link vlog_conditional  Conditional
+hi default link vlog_repeat       Repeat
+hi default link vlog_label        Label
+
+hi default link vlog_constant     Constant
+hi default link vlog_number       Number
+hi default link vlog_time         Number
+
+hi default link vlog_sensitivity  Keyword
+
+hi default link vlog_operator     Operator
+hi default link vlog_keyword      Keyword
+
+hi default link vlog_control      Label
+hi default link vlog_assert       Exception
+
+hi default link vlog_function     Function
+
+hi default link vlog_todo         Todo
+hi default link vlog_comment      Comment
+hi default link vlog_em_script    SpecialComment
+
+hi default link vlog_string       String
+hi default link vlog_escape       Special
+
+hi default link vlog_discouraged  Error
+hi default link vlog_bad_newline  Error
+
+" A bunch of useful Verilog keywords
+
+
+
+
+
+
 
 "##########################################################
 "       SystemVerilog Syntax
 "##########################################################
 
-syn keyword verilogStatement   always and assign automatic buf
-syn keyword verilogStatement   bufif0 bufif1 cell cmos
-syn keyword verilogStatement   config deassign defparam design
-syn keyword verilogStatement   disable edge endconfig
-syn keyword verilogStatement   endgenerate endmodule
-syn keyword verilogStatement   endprimitive endtable
-syn keyword verilogStatement   event force
-syn keyword verilogStatement   generate genvar highz0 highz1 ifnone
-syn keyword verilogStatement   incdir include initial inout input
-syn keyword verilogStatement   instance integer large liblist
-syn keyword verilogStatement   library localparam macromodule medium
-syn keyword verilogStatement   module nand negedge nmos nor
-syn keyword verilogStatement   noshowcancelled not notif0 notif1 or
-syn keyword verilogStatement   output parameter pmos posedge primitive
-syn keyword verilogStatement   pull0 pull1 pulldown pullup
-syn keyword verilogStatement   pulsestyle_onevent pulsestyle_ondetect
-syn keyword verilogStatement   rcmos real realtime reg release
-syn keyword verilogStatement   rnmos rpmos rtran rtranif0 rtranif1
-syn keyword verilogStatement   scalared showcancelled signed small
-syn keyword verilogStatement   specparam strong0 strong1
-syn keyword verilogStatement   supply0 supply1 table time tran
-syn keyword verilogStatement   tranif0 tranif1 tri tri0 tri1 triand
-syn keyword verilogStatement   trior trireg unsigned use vectored wait
-syn keyword verilogStatement   wand weak0 weak1 wire wor xnor xor
+syn keyword verilogStatement   incdir include
+syn keyword verilogStatement   library
+syn keyword verilogStatement   scalared
+syn keyword verilogStatement   specparam
+syn keyword verilogStatement   vectored wait
 
-syn keyword verilogStatement   always_comb always_ff always_latch
-syn keyword verilogStatement   class endclass
-syn keyword verilogStatement   checker endchecker
-syn keyword verilogStatement   virtual local const protected
-syn keyword verilogStatement   package endpackage
 syn keyword verilogStatement   rand randc constraint randomize
-syn keyword verilogStatement   with inside dist
+syn keyword verilogStatement   with dist
 syn keyword verilogStatement   randcase
 syn keyword verilogStatement   randsequence
 syn keyword verilogStatement   get_randstate set_randstate
 syn keyword verilogStatement   srandom
-syn keyword verilogStatement   logic bit byte time
-syn keyword verilogStatement   int longint shortint
-syn keyword verilogStatement   struct packed
-syn keyword verilogStatement   final
-syn keyword verilogStatement   import export
-syn keyword verilogStatement   context pure
-syn keyword verilogStatement   void shortreal chandle string
-syn keyword verilogStatement   clocking endclocking
-syn keyword verilogStatement   interface endinterface modport
 syn keyword verilogStatement   cover coverpoint
-syn keyword verilogStatement   program endprogram
 syn keyword verilogStatement   bins binsof illegal_bins ignore_bins
-syn keyword verilogStatement   alias matches solve static assert
-syn keyword verilogStatement   assume before expect bind
-syn keyword verilogStatement   extends null tagged extern this
-syn keyword verilogStatement   first_match throughout timeprecision
-syn keyword verilogStatement   timeunit priority type union
-syn keyword verilogStatement   uwire var cross ref wait_order intersect
-syn keyword verilogStatement   wildcard within
-syn keyword verilogStatement   triggered
+syn keyword verilogStatement   matches solve 
+syn keyword verilogStatement   before bind
+syn keyword verilogStatement   tagged 
+syn keyword verilogStatement   type
+syn keyword verilogStatement   uwire var cross ref wait_order 
+syn keyword verilogStatement   wildcard 
 syn keyword verilogStatement   std
-syn keyword verilogStatement   accept_on eventually global implements implies
-syn keyword verilogStatement   interconnect let nettype nexttime reject_on restrict soft
-syn keyword verilogStatement   s_always s_eventually s_nexttime s_until s_until_with
-syn keyword verilogStatement   strong sync_accept_on sync_reject_on unique unique0
-syn keyword verilogStatement   until until_with untyped weak
+syn keyword verilogStatement   interconnect let soft
+syn keyword verilogStatement   untyped
 
-
-syn keyword verilogTypeDef     typedef enum
-
-syn keyword verilogConditional if else case casex casez default endcase
-syn keyword verilogConditional iff
-
-syn keyword verilogRepeat      forever repeat while for
-syn keyword verilogRepeat      return break continue
-syn keyword verilogRepeat      do while foreach
-
-syn keyword verilogLabel       fork join
-syn keyword verilogLabel       join_any join_none forkjoin
-
-syn match   verilogGlobal      "`begin_\w\+"
-syn match   verilogGlobal      "`end_\w\+"
-syn match   verilogGlobal      "`remove_\w\+"
-syn match   verilogGlobal      "`restore_\w\+"
-
-syn match   verilogGlobal      "`[a-zA-Z0-9_]\+\>"
-
-syn match   verilogNumber      "\<\d[0-9_]*\(\.\?[0-9_]\+\)\=\([fpnum]\)\=s\>"
-syn keyword verilogNumber      1step
-
-syn keyword verilogMethod      new
-syn match   verilogMethod      "\(\s\+\.\)\@<!\<\w\+\ze("
-
-syn match   verilogAssertion   "\<\w\+\>\s*:\s*\<assert\>\_.\{-});"
-
-syn keyword verilogObject      super
-syn match   verilogObject      "\<\w\+\ze\(::\|\.\)" contains=verilogNumber
 
 " Only enable folding if g:verilog_syntax_fold is defined
 if exists("g:verilog_syntax_fold")
@@ -178,7 +246,6 @@ else
 endif
 
 " Expand verilogComment
-syn match   verilogComment  "//.*"                      contains=verilogTodo,@Spell
 if len(s:verilog_syntax_fold) > 0
     if index(s:verilog_syntax_fold, "comment") >= 0 || index(s:verilog_syntax_fold, "all") >= 0
         syn region  verilogComment  start="/\*"     end="\*/"   contains=verilogTodo,@Spell                     keepend fold
@@ -338,7 +405,6 @@ if version >= 508 || !exists("did_verilog_syn_inits")
     HiLink verilogOperator        Special
     HiLink verilogStatement       Statement
     HiLink verilogGlobal          Define
-    HiLink verilogDirective       SpecialComment
     HiLink verilogEscape          Special
     HiLink verilogMethod          Function
     HiLink verilogTypeDef         TypeDef
@@ -352,5 +418,3 @@ let b:current_syntax = "verilog_systemverilog"
 
 " Restore cpoptions
 let &cpoptions=oldcpo
-
-" vim: ts=8
