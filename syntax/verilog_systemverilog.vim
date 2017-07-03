@@ -50,7 +50,7 @@ syn match   vlog_preproc      "`unconnected_drive"
 
 syn keyword vlog_port         input output inout
 
-syn keyword vlog_type         logic reg wire bit tri
+syn keyword vlog_type         logic reg wire uwire bit tri
 syn keyword vlog_type         int integer unsigned signed
 syn keyword vlog_type         byte
 syn keyword vlog_type         shortint shortreal
@@ -65,20 +65,23 @@ syn keyword vlog_structure    interface endinterface modport clocking endclockin
 syn keyword vlog_structure    checker endchecker config endconfig
 syn keyword vlog_structure    module endmodule table endtable
 syn keyword vlog_structure    primitive endprimitive
-syn keyword vlog_storageclass virtual packed local protected const
+syn keyword vlog_structure    task endtask function endfunction
+syn keyword vlog_storageclass virtual packed tagged local protected const ref
 syn keyword vlog_storageclass extends implements
-syn keyword vlog_storageclass parameter localparam genvar
+syn keyword vlog_storageclass parameter localparam specparam genvar
 syn keyword vlog_typedef      typedef nettype
 syn keyword vlog_modifier     context pure export import automatic extern static
 
 syn keyword vlog_special      timeprecision timeunit
-syn keyword vlog_special      design liblist instance use cell
+syn keyword vlog_special      design liblist instance use cell incdir include
 
 syn keyword vlog_conditional  if else case endcase casex casez
 syn keyword vlog_conditional  inside unique unique0 priority
 syn keyword vlog_conditional  generate endgenerate
+syn keyword vlog_conditional  randcase
 syn keyword vlog_repeat       forever repeat while for do foreach
 syn keyword vlog_label        return continue break default
+syn keyword vlog_label        begin end
 
 syn keyword vlog_statement    assign deassign alias force release
 syn keyword vlog_statement    new
@@ -99,7 +102,8 @@ syn keyword vlog_sensitivity  edge posedge negedge
 
 syn match   vlog_operator     "[&|~><!)(*%@+/=?:;}{,.\^\-\[\]]"
 syn match   vlog_operator     "\<implies\>"
-syn keyword vlog_keyword      null this super
+syn keyword vlog_keyword      null this super std
+syn keyword vlog_keyword      wait wait_order bind
 
 syn keyword vlog_control      fork join join_any join_none forkjoin
 
@@ -108,7 +112,7 @@ syn match   vlog_function     "\$\=\(\s\+\.\)\@<!\<\w\+\ze("
 " a bunch of "deprecated" keywords. e.g. defparam is pretty much considered
 " evil in modern code. However, one might encounter it in library code or
 " legacy code
-syn keyword vlog_discouraged  defparam macromodule
+syn keyword vlog_discouraged  defparam macromodule var
 
 syn region  vlog_string start=+"+ skip=+\\"+ end=+"+ contains=vlog_escape,@Spell
 syn match   vlog_escape +\\[nt"\\]+ contained
@@ -118,6 +122,7 @@ syn case ignore
 syn keyword vlog_todo         contained TODO FIXME XXX
 syn case match
 syn match   vlog_comment      "//.*" contains=vlog_todo,@Spell,vlog_bad_newline
+syn region  vlog_comment      start="/\*" end="\*/" contains=vlog_todo,@Spell keepend
 
 " space after a \
 " This is dangerous as most compilers will not treat the \ as a
@@ -144,7 +149,7 @@ if exists("g:vlog_all_keyword")
     hi default link vlog_keyword2     Keyword
 endif
 
-syn keyword vlog_assert        assert assume restrict expect
+syn keyword vlog_assert        assert assume restrict expect cover
 syn keyword vlog_keyword       accept_on reject_on
 syn keyword vlog_keyword       sync_accept_on sync_reject_on
 syn keyword vlog_keyword       eventually nexttime until until_with
@@ -153,6 +158,17 @@ syn keyword vlog_keyword       s_always
 syn keyword vlog_keyword       intersect first_match throughout within
 syn keyword vlog_keyword       triggered matched iff disable
 syn keyword vlog_keyword       property endproperty
+syn keyword vlog_keyword       coverpoint bins illegal_bins ignore_bins illegal
+syn keyword vlog_keyword       wildcard binsof
+syn keyword vlog_structure     property endproperty
+
+syn keyword vlog_modifier      rand randc
+syn keyword vlog_statement     randomize constraint
+syn keyword vlog_keyword       with solve before cross dist
+
+syn keyword vlog_structure     sequence endsequence randsequence
+syn keyword vlog_structure     covergroup endgroup
+syn keyword vlog_keyword       untyped
 
 syn region  vlog_em_script   start="//\s*synopsys\s\+dc_script_begin\>" end="//\s*synopsys\s\+dc_script_end\>"
 
@@ -201,217 +217,6 @@ hi default link vlog_escape       Special
 
 hi default link vlog_discouraged  Error
 hi default link vlog_bad_newline  Error
-
-" A bunch of useful Verilog keywords
-
-
-
-
-
-
-
-"##########################################################
-"       SystemVerilog Syntax
-"##########################################################
-
-syn keyword verilogStatement   incdir include
-syn keyword verilogStatement   library
-syn keyword verilogStatement   scalared
-syn keyword verilogStatement   specparam
-syn keyword verilogStatement   vectored wait
-
-syn keyword verilogStatement   rand randc constraint randomize
-syn keyword verilogStatement   with dist
-syn keyword verilogStatement   randcase
-syn keyword verilogStatement   randsequence
-syn keyword verilogStatement   get_randstate set_randstate
-syn keyword verilogStatement   srandom
-syn keyword verilogStatement   cover coverpoint
-syn keyword verilogStatement   bins binsof illegal_bins ignore_bins
-syn keyword verilogStatement   matches solve 
-syn keyword verilogStatement   before bind
-syn keyword verilogStatement   tagged 
-syn keyword verilogStatement   type
-syn keyword verilogStatement   uwire var cross ref wait_order 
-syn keyword verilogStatement   wildcard 
-syn keyword verilogStatement   std
-syn keyword verilogStatement   interconnect let soft
-syn keyword verilogStatement   untyped
-
-
-" Only enable folding if g:verilog_syntax_fold is defined
-if exists("g:verilog_syntax_fold")
-    let s:verilog_syntax_fold=split(g:verilog_syntax_fold, ",")
-else
-    let s:verilog_syntax_fold=[]
-endif
-
-" Expand verilogComment
-if len(s:verilog_syntax_fold) > 0
-    if index(s:verilog_syntax_fold, "comment") >= 0 || index(s:verilog_syntax_fold, "all") >= 0
-        syn region  verilogComment  start="/\*"     end="\*/"   contains=verilogTodo,@Spell                     keepend fold
-    else
-        syn region  verilogComment  start="/\*"     end="\*/"   contains=verilogTodo,@Spell                     keepend
-    endif
-endif
-
-if index(s:verilog_syntax_fold, "task") >= 0 || index(s:verilog_syntax_fold, "all") >= 0
-    syn region  verilogFold
-        \ matchgroup=verilogStatement
-        \ start="\(\(\(extern\s\+\(\(pure\s\+\)\?virtual\s\+\)\?\)\|\(\pure\s\+virtual\s\+\)\)\(\(static\|protected\|local\)\s\+\)\?\)\@<!\<task\>"
-        \ end="\<endtask\>"
-        \ transparent
-        \ keepend
-        \ fold
-    syn match   verilogStatement "\(\(\(extern\s\+\(\(pure\s\+\)\?virtual\s\+\)\?\)\|\(\pure\s\+virtual\s\+\)\)\(\(static\|protected\|local\)\s\+\)\?\)\@<=\<task\>"
-else
-    syn keyword verilogStatement  task endtask
-endif
-
-if index(s:verilog_syntax_fold, "function") >= 0 || index(s:verilog_syntax_fold, "all") >= 0
-    syn region  verilogFold
-        \ matchgroup=verilogStatement
-        \ start="\(\(\(extern\s\+\(\(pure\s\+\)\?virtual\s\+\)\?\)\|\(\pure\s\+virtual\s\+\)\)\(\(static\|protected\|local\)\s\+\)\?\)\@<!\<function\>"
-        \ end="\<endfunction\>"
-        \ transparent
-        \ keepend
-        \ fold
-    syn match   verilogStatement "\(\(\(extern\s\+\(\(pure\s\+\)\?virtual\s\+\)\?\)\|\(\pure\s\+virtual\s\+\)\)\(\(static\|protected\|local\)\s\+\)\?\)\@<=\<function\>"
-else
-    syn keyword verilogStatement  function endfunction
-endif
-
-if index(s:verilog_syntax_fold, "covergroup") >= 0 || index(s:verilog_syntax_fold, "all") >= 0
-    syn region  verilogFold
-        \ matchgroup=verilogStatement
-        \ start="\<covergroup\>"
-        \ end="\<endgroup\>"
-        \ transparent
-        \ keepend
-        \ fold
-else
-    syn keyword verilogStatement  covergroup endgroup
-endif
-
-if index(s:verilog_syntax_fold, "sequence") >= 0 || index(s:verilog_syntax_fold, "all") >= 0
-    syn region  verilogFold
-        \ matchgroup=verilogStatement
-        \ start="\<sequence\>"
-        \ end="\<endsequence\>"
-        \ transparent
-        \ keepend
-        \ fold
-else
-    syn keyword verilogStatement  sequence endsequence
-endif
-
-if index(s:verilog_syntax_fold, "property") >= 0 || index(s:verilog_syntax_fold, "all") >= 0
-    syn region  verilogFold
-        \ matchgroup=verilogStatement
-        \ start="\<property\>"
-        \ end="\<endproperty\>"
-        \ transparent
-        \ keepend
-        \ fold
-endif
-
-if index(s:verilog_syntax_fold, "specify") >= 0 || index(s:verilog_syntax_fold, "all") >= 0
-    syn region  verilogFold
-        \ matchgroup=verilogLabel
-        \ start="\<specify\>"
-        \ end="\<endspecify\>"
-        \ transparent
-        \ keepend
-        \ fold
-else
-    syn keyword verilogLabel      specify endspecify
-endif
-
-if index(s:verilog_syntax_fold, "block") >= 0 || index(s:verilog_syntax_fold, "all") >= 0
-    syn region  verilogFold
-        \ matchgroup=verilogLabel
-        \ start="\<begin\>"
-        \ end="\<end\>"
-        \ transparent
-        \ fold
-else
-    syn keyword verilogLabel      begin end
-endif
-
-if index(s:verilog_syntax_fold, "define") >= 0 || index(s:verilog_syntax_fold, "all") >= 0
-    syn region verilogFoldIfContainer
-        \ start="`ifn\?def\>"
-        \ end="`endif\>"
-        \ skip="/[*/].*"
-        \ transparent
-        \ keepend extend
-        \ containedin=ALLBUT,verilogComment
-        \ contains=NONE
-    syn region verilogFoldIf
-        \ start="`ifn\?def\>"
-        \ end="^\s*`els\(e\|if\)\>"ms=s-1,me=s-1
-        \ fold transparent
-        \ keepend
-        \ contained containedin=verilogFoldIfContainer
-        \ nextgroup=verilogFoldElseIf,verilogFoldElse
-        \ contains=TOP
-    syn region verilogFoldElseIf
-        \ start="`els\(e\|if\)\>"
-        \ end="^\s*`els\(e\|if\)\>"ms=s-1,me=s-1
-        \ fold transparent
-        \ keepend
-        \ contained containedin=verilogFoldIfContainer
-        \ nextgroup=verilogFoldElseIf,verilogFoldElse
-        \ contains=TOP
-    syn region verilogFoldElse
-        \ start="`else\>"
-        \ end="`endif\>"
-        \ fold transparent
-        \ keepend
-        \ contained containedin=verilogFoldIfContainer
-        \ contains=TOP
-    " The above syntax regions start/end matches will disable the respective
-    " verilogGlobal keywords. This syntax match fixes that:
-    syn match verilogGlobal "\<`\(ifn\?def\|e\(els\(e\|if\)\)\|ndif\)\>"
-endif
-
-"Modify the following as needed.  The trade-off is performance versus
-"functionality.
-syn sync minlines=50
-
-
-" Define the default highlighting.
-" For version 5.7 and earlier: only when not done already
-" For version 5.8 and later: only when an item doesn't have highlighting yet
-if version >= 508 || !exists("did_verilog_syn_inits")
-    if version < 508
-        let did_verilog_syn_inits = 1
-        command -nargs=+ HiLink hi link <args>
-    else
-        command -nargs=+ HiLink hi def link <args>
-    endif
-
-    " The default highlighting.
-    HiLink verilogCharacter       Character
-    HiLink verilogConditional     Conditional
-    HiLink verilogRepeat          Repeat
-    HiLink verilogString          String
-    HiLink verilogTodo            Todo
-    HiLink verilogComment         Comment
-    HiLink verilogConstant        Constant
-    HiLink verilogLabel           Label
-    HiLink verilogNumber          Number
-    HiLink verilogOperator        Special
-    HiLink verilogStatement       Statement
-    HiLink verilogGlobal          Define
-    HiLink verilogEscape          Special
-    HiLink verilogMethod          Function
-    HiLink verilogTypeDef         TypeDef
-    HiLink verilogAssertion       Include
-    HiLink verilogObject          Type
-
-    delcommand HiLink
-endif
 
 let b:current_syntax = "verilog_systemverilog"
 
