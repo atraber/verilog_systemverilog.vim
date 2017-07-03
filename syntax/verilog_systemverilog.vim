@@ -68,7 +68,7 @@ syn keyword vlog_structure    primitive endprimitive
 syn keyword vlog_storageclass virtual packed local protected const
 syn keyword vlog_storageclass extends implements
 syn keyword vlog_storageclass parameter localparam genvar
-syn keyword vlog_typedef      typedef
+syn keyword vlog_typedef      typedef nettype
 syn keyword vlog_modifier     context pure export import automatic extern static
 
 syn keyword vlog_special      timeprecision timeunit
@@ -152,6 +152,7 @@ syn keyword vlog_keyword       s_eventually s_nexttime s_until s_until_with
 syn keyword vlog_keyword       s_always
 syn keyword vlog_keyword       intersect first_match throughout within
 syn keyword vlog_keyword       triggered matched iff disable
+syn keyword vlog_keyword       property endproperty
 
 syn region  vlog_em_script   start="//\s*synopsys\s\+dc_script_begin\>" end="//\s*synopsys\s\+dc_script_end\>"
 
@@ -165,7 +166,7 @@ hi default link vlog_port         StorageClass
 hi default link vlog_type         Type
 hi default link vlog_structure    Structure
 hi default link vlog_storageclass StorageClass
-hi default link vlog_typedef      Typedef nettype
+hi default link vlog_typedef      Typedef
 
 hi default link vlog_modifier     Type
 
@@ -312,8 +313,6 @@ if index(s:verilog_syntax_fold, "property") >= 0 || index(s:verilog_syntax_fold,
         \ transparent
         \ keepend
         \ fold
-else
-    syn keyword verilogStatement  property endproperty
 endif
 
 if index(s:verilog_syntax_fold, "specify") >= 0 || index(s:verilog_syntax_fold, "all") >= 0
