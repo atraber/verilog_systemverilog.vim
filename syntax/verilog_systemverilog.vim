@@ -107,7 +107,8 @@ syn keyword vlog_keyword      wait wait_order bind
 
 syn keyword vlog_control      fork join join_any join_none forkjoin
 
-syn match   vlog_function     "\$\=\(\s\+\.\)\@<!\<\w\+\ze("
+syn match   vlog_function     "\<\w\+\(\.\|::\)\w\+\s*\ze("
+syn match   vlog_function     "\$\=\w\+\s*\ze("
 
 " a bunch of "deprecated" keywords. e.g. defparam is pretty much considered
 " evil in modern code. However, one might encounter it in library code or
